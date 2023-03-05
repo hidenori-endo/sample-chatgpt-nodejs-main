@@ -33,7 +33,7 @@ function App() {
   }
 
   const callApi = (e: HTMLFormElement) => {
-    if (messageValue.trim() === "") {
+    if (messageAreaRef.current?.value?.trim() === "") {
       return;
     }
     const formData = new FormData(e);
@@ -57,11 +57,11 @@ function App() {
         resJson = response.json();
         resJson.then((value: any) => {
 
-          let newMessages = pastMessagesValue;
-          newMessages += '\n\n' + '[user]' + '\n' + messageValue.trim() + '\n';
-          newMessages += '\n' + '[assistant]' + '\n' + value.message.content;
-          setPastMessages(newMessages.trim());
           if (pastAreaRef.current) {
+            let newMessages = pastAreaRef.current.value;
+            newMessages += '\n\n' + '[user]' + '\n' + messageValue.trim() + '\n';
+            newMessages += '\n' + '[assistant]' + '\n' + value.message.content;
+            setPastMessages(newMessages.trim());
             pastAreaRef.current.value += newMessages.trim();
             pastAreaRef.current.scrollTop = pastAreaRef.current.scrollHeight;
           }
@@ -73,17 +73,21 @@ function App() {
       });
     };
     fetchData({});
-    setResponse(messageValue);
-    setMessage("");
+    if (messageAreaRef.current) {
+      setResponse(messageAreaRef.current.value);
+      messageAreaRef.current.value = "";
+      setMessage("");
+    }
   }
 
   const summarize = () =>{
     if (messageAreaRef.current && pastAreaRef.current && formRef.current) {
       messageAreaRef.current.value = "";
-      messageAreaRef.current.value = "Summarize the following conversation separately for user and assistant.\n\n";
+      messageAreaRef.current.value = "次のuserとassistantの会話を要約してください。\n\n";
       messageAreaRef.current.value += pastAreaRef.current.value;
       pastAreaRef.current.value = "";
-      setMessage(messageAreaRef.current.value);
+      setPastMessages("");
+      setMessage("");
       callApi(formRef.current);
     }
   }
@@ -243,7 +247,7 @@ function App() {
                     <p>(cols:<input type="text" ref={systemAreaWidthRef} name="systemAreaWidth" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
                   </td>
                   <td>
-                    <textarea ref={systemAreaRef} name="system" value={systemValue} onChange={(e) => setSystem(e.target.value)} rows={10} cols={100} />
+                    <textarea ref={systemAreaRef} name="system" value={systemValue} onChange={(e) => setSystem(e.target.value)} rows={10} cols={80} />
                   </td>
                 </tr>
                 <tr>
@@ -256,14 +260,14 @@ function App() {
                       ref={messageAreaRef} name="message" value={messageValue}
                       onChange={(e) => setMessage(e.target.value)}
                       onKeyDown={sendMessage}
-                      rows={30} cols={100} />
-                    <td valign="top"><button type="submit">submit</button></td>
+                      rows={30} cols={80} />
+                    <td valign="top"><button type="submit">send message</button></td>
                   </td>
                 </tr>
                 <tr>
                   <td valign="top">last request is</td>
                   <td>
-                    <textarea ref={responseAreaRef} value={responseValue} onChange={(e) => setResponse(e.target.value)} rows={6} cols={100} />
+                    <textarea ref={responseAreaRef} value={responseValue} onChange={(e) => setResponse(e.target.value)} rows={6} cols={80} />
                   </td>
                 </tr>
                 <tr>
@@ -291,10 +295,10 @@ function App() {
                 <p>chat gpt response</p>
                 <p>(rows:<input type="text" ref={pastMessageAreaHeightRef} name="pastMessageAreaHeight" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
                 <p>(cols:<input type="text" ref={pastMessageAreaWidthRef} name="pastMessageAreaWidth" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
-                <p><input type="button" onClick={summarize} value="summary" /></p>
+                <p><input type="button" onClick={summarize} value="summarize" /></p>
               </div>
               <div>
-                <textarea ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} onChange={(e) => setPastMessages(e.target.value)} rows={60} cols={120} />
+                <textarea ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} onChange={(e) => setPastMessages(e.target.value)} rows={60} cols={80} />
               </div>
             </div>
           </div>
