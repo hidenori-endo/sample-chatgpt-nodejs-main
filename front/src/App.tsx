@@ -77,6 +77,18 @@ function App() {
     setMessage("");
   }
 
+  const summarize = () =>{
+    if (messageAreaRef.current && pastAreaRef.current && formRef.current) {
+      messageAreaRef.current.value = "";
+      messageAreaRef.current.value = "Summarize the following conversation separately for user and assistant.\n\n";
+      messageAreaRef.current.value += pastAreaRef.current.value;
+      pastAreaRef.current.value = "";
+      setMessage(messageAreaRef.current.value);
+      callApi(formRef.current);
+    }
+  }
+  
+
   const setHeight = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     if (e.target.name === "systemAreaHeight") {
@@ -279,6 +291,7 @@ function App() {
                 <p>chat gpt response</p>
                 <p>(rows:<input type="text" ref={pastMessageAreaHeightRef} name="pastMessageAreaHeight" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
                 <p>(cols:<input type="text" ref={pastMessageAreaWidthRef} name="pastMessageAreaWidth" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
+                <p><input type="button" onClick={summarize} value="summary" /></p>
               </div>
               <div>
                 <textarea ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} onChange={(e) => setPastMessages(e.target.value)} rows={60} cols={120} />
