@@ -1,5 +1,6 @@
 # ChatGPT API サンプルコード
 このコードは、ReactとNode.js（TypeScript）を使ってChatGPT APIを呼び出すサンプルコードです。なお、OpenAI APIを利用するには料金がかかりますので注意してください。
+また、利用にあたっては自己責任でお願いします。
 
 ## 実行方法
 1. npmをインストールしてください。
@@ -12,6 +13,7 @@
 ## その他の注意点
 - このコードはデモ目的であり、本番環境にデプロイするには修正が必要な場合があります。
 - APIキーの取得方法や価格についてはOpenAI APIのドキュメントを参照してください。
+
 # ChatGPT API Sample Code
 
 This is a sample source code that utilizes React and Node.js (TypeScript) to call the ChatGPT API. Please note that there will be a charge for using the OpenAI API.
