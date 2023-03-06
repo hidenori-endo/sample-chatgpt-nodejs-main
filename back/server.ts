@@ -4,7 +4,8 @@ import { getCompletion } from "./chatmain";
 
 
 const app: express.Express = express();
-app.use(express.json())
+app.use(express.json());
+app.use(express.static("public"));
 const port = 8000;
 
 app.post("/api", (req: express.Request, res: express.Response) => {
