@@ -83,7 +83,7 @@ function App() {
   const summarize = () =>{
     if (messageAreaRef.current && pastAreaRef.current && formRef.current) {
       messageAreaRef.current.value = "";
-      messageAreaRef.current.value = "次のuserとassistantの会話を要約してください。\n\n";
+      messageAreaRef.current.value = "次のuserとassistantの会話を要約してください。\n\n" //"Summarize the following conversation separately for user and assistant.\n\n";
       messageAreaRef.current.value += pastAreaRef.current.value;
       pastAreaRef.current.value = "";
       setPastMessages("");
@@ -119,23 +119,23 @@ function App() {
       messageAreaRef.current &&
       responseAreaRef.current &&
       pastAreaRef.current) {
-      if (systemAreaWidthRef.current && systemAreaWidthRef.current?.value != "") {
+      if (systemAreaWidthRef.current && systemAreaWidthRef.current?.value !== "") {
         systemAreaRef.current.cols = parseInt(systemAreaWidthRef.current.value);
         messageAreaRef.current.cols = parseInt(systemAreaWidthRef.current.value);
         responseAreaRef.current.cols = parseInt(systemAreaWidthRef.current.value);
       }
-      if (pastMessageAreaWidthRef.current && pastMessageAreaWidthRef.current?.value != "") {
+      if (pastMessageAreaWidthRef.current && pastMessageAreaWidthRef.current?.value !== "") {
         pastAreaRef.current.cols = parseInt(pastMessageAreaWidthRef.current?.value);
       }
 
       
-      if (messageAreaHeightRef.current && messageAreaHeightRef.current?.value != "") {
+      if (messageAreaHeightRef.current && messageAreaHeightRef.current?.value !== "") {
         messageAreaRef.current.rows = parseInt(messageAreaHeightRef.current.value);
       }
-      if (systemAreaHeightRef.current && systemAreaHeightRef.current?.value != "") {
+      if (systemAreaHeightRef.current && systemAreaHeightRef.current?.value !== "") {
         systemAreaRef.current.rows = parseInt(systemAreaHeightRef.current.value);
       }
-      if (pastMessageAreaHeightRef.current && pastMessageAreaHeightRef.current?.value != "") {
+      if (pastMessageAreaHeightRef.current && pastMessageAreaHeightRef.current?.value !== "") {
         pastAreaRef.current.rows = parseInt(pastMessageAreaHeightRef.current.value);
       }
   }
@@ -150,6 +150,11 @@ function App() {
 
   const save = (e: any) => {
     e.preventDefault();
+
+    if(!window.confirm('save?')){
+      return;
+    }
+
     if (formRef.current) {
       const formData = new FormData(formRef.current);
       const fetchData = async (data: any) => {
@@ -168,9 +173,12 @@ function App() {
           if (!response.ok) {
             console.log('error!');
           }
+          else{
+            window.confirm('saved!');
+          }
 
         }).then((response) => {
-          console.log(response);
+          // console.log(response);
         }).catch((e) => {
           console.log(e);
         });
@@ -296,6 +304,7 @@ function App() {
                 <p>(rows:<input type="text" ref={pastMessageAreaHeightRef} name="pastMessageAreaHeight" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
                 <p>(cols:<input type="text" ref={pastMessageAreaWidthRef} name="pastMessageAreaWidth" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
                 <p><input type="button" onClick={summarize} value="summarize" /></p>
+                <p><input type="button" onClick={(e) => {setPastMessages("") ; setMessage("")}} value="clear" /></p>
               </div>
               <div>
                 <textarea ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} onChange={(e) => setPastMessages(e.target.value)} rows={60} cols={80} />
