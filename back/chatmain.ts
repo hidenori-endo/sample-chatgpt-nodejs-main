@@ -65,6 +65,7 @@ export const getCompletion = (jsonData: any, res: express.Response) => {
     }).then(response => {
         //console.log(response);
     }).catch(e => {
+        console.log(e);
         res.json({ message : e });
     });
 
