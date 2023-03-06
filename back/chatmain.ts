@@ -7,9 +7,19 @@ export const getCompletion = (jsonData: any, res: express.Response) => {
         res.json();
         return;
     }
-    const configuration = new Configuration({
-        apiKey: jsonData.openaiApiKey,
-    });
+
+    let configuration;
+    if (jsonData.openaiApiKey != "") {
+        configuration = new Configuration({
+            apiKey: jsonData.openaiApiKey,
+        });    
+    }
+    else if (process.env.OPENAI_API_KEY)
+    {
+        configuration = new Configuration({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+    }
     const openai = new OpenAIApi(configuration);
 
     const pastMessagea = jsonData.pastMessage.split('\n');
@@ -53,7 +63,7 @@ export const getCompletion = (jsonData: any, res: express.Response) => {
     completion.then(response => {
         res.json({ message : response.data.choices[0].message});
     }).then(response => {
-        console.log(response);
+        //console.log(response);
     }).catch(e => {
         res.json({ message : e });
     });
