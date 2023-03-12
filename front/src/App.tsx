@@ -40,7 +40,7 @@ function App() {
 
     const fetchData = async (data: any) => {
       let resJson: any = [];
-      fetch("api", {
+      let res = await fetch("api", {
         method: 'POST',
         mode: 'cors',
         cache: 'no-cache',
@@ -50,27 +50,58 @@ function App() {
         redirect: 'follow',
         referrerPolicy: 'no-referrer',
         body: JSON.stringify(Object.fromEntries(formData.entries()))
-      }).then((response) => {
-        if (!response.ok) {
-          console.log('error!');
-        }
-        resJson = response.json();
-        resJson.then((value: any) => {
-
-          if (pastAreaRef.current) {
-            let newMessages = pastAreaRef.current.value;
-            newMessages += '\n\n' + '[user]' + '\n' + messageValue.trim() + '\n';
-            newMessages += '\n' + '[assistant]' + '\n' + value.message.content;
-            setPastMessages(newMessages.trim());
-            pastAreaRef.current.value += newMessages.trim();
-            pastAreaRef.current.scrollTop = pastAreaRef.current.scrollHeight;
+      });
+      const reader = res.body!.getReader()!;
+      const decoder = new TextDecoder("utf-8");
+      let isFirst = true;
+      let isDone = false;
+      let allMesages = "";
+      const readChunk = async () => {
+        return reader.read().then(({ value, done }): any => {
+          try {
+            if (!done) {
+              let dataString = decoder.decode(value);
+              const data = JSON.parse(dataString);
+              console.log(data);
+  
+              if (data.error) {
+                console.error("Error while generating content: " + data.message);
+              } else if (!data.finished) {
+                if (pastAreaRef.current) {
+                  if (isFirst) {
+                    isFirst = false;
+                    let newMessages = pastAreaRef.current.value;
+                    newMessages += '\n\n' + '[user]' + '\n' + messageValue.trim() + '\n';
+                    newMessages += '\n' + '[assistant]' + '\n';
+                    allMesages = newMessages
+                    newMessages += data.text;
+                    pastAreaRef.current.value = newMessages.trim();
+                  } else{
+                    pastAreaRef.current.value += data.text;
+                  }
+                  pastAreaRef.current.scrollTop = pastAreaRef.current.scrollHeight;
+                }
+              } else {
+                if (pastAreaRef.current) {
+                  pastAreaRef.current.value = (allMesages + data.text).trim();
+                }
+              }
+            } else {
+              console.log("done");
+              if (pastAreaRef.current) {
+                setPastMessages(pastAreaRef.current.value);
+              }
+            }
+              
+          } catch (error) {
+            console.log(error);            
+          }
+          if (!done) {
+            return readChunk();
           }
         });
-      }).then((response) => {
-        console.log(response);
-      }).catch((e) => {
-        console.log(e);
-      });
+      };
+      readChunk();
     };
     fetchData({});
     if (messageAreaRef.current) {
@@ -80,7 +111,7 @@ function App() {
     }
   }
 
-  const summarize = () =>{
+  const summarize = () => {
     if (messageAreaRef.current && pastAreaRef.current && formRef.current) {
       messageAreaRef.current.value = "";
       messageAreaRef.current.value = "次のuserとassistantの会話を要約してください。\n\n" //"Summarize the following conversation separately for user and assistant.\n\n";
@@ -91,7 +122,7 @@ function App() {
       callApi(formRef.current);
     }
   }
-  
+
 
   const setHeight = (e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -128,7 +159,7 @@ function App() {
         pastAreaRef.current.cols = parseInt(pastMessageAreaWidthRef.current?.value);
       }
 
-      
+
       if (messageAreaHeightRef.current && messageAreaHeightRef.current?.value !== "") {
         messageAreaRef.current.rows = parseInt(messageAreaHeightRef.current.value);
       }
@@ -138,7 +169,7 @@ function App() {
       if (pastMessageAreaHeightRef.current && pastMessageAreaHeightRef.current?.value !== "") {
         pastAreaRef.current.rows = parseInt(pastMessageAreaHeightRef.current.value);
       }
-  }
+    }
   }
   const sendMessage = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.shiftKey && e.key === 'Enter') {
@@ -151,7 +182,7 @@ function App() {
   const save = (e: any) => {
     e.preventDefault();
 
-    if(!window.confirm('save?')){
+    if (!window.confirm('save?')) {
       return;
     }
 
@@ -173,7 +204,7 @@ function App() {
           if (!response.ok) {
             console.log('error!');
           }
-          else{
+          else {
             window.confirm('saved!');
           }
 
@@ -304,7 +335,7 @@ function App() {
                 <p>(rows:<input type="text" ref={pastMessageAreaHeightRef} name="pastMessageAreaHeight" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
                 <p>(cols:<input type="text" ref={pastMessageAreaWidthRef} name="pastMessageAreaWidth" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
                 <p><input type="button" onClick={summarize} value="summarize" /></p>
-                <p><input type="button" onClick={(e) => {setPastMessages("") ; setMessage("")}} value="clear" /></p>
+                <p><input type="button" onClick={(e) => { setPastMessages(""); setMessage("") }} value="clear" /></p>
               </div>
               <div>
                 <textarea ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} onChange={(e) => setPastMessages(e.target.value)} rows={60} cols={80} />
