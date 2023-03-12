@@ -73,7 +73,6 @@ export const getCompletion = async (jsonData: any, res: express.Response) => {
             try {
                 let str: string = chunk.toString();
 
-                console.log(str);
                 // [DONE] is the last of steram
                 if (str.indexOf("[DONE]") > 0) {
                     return;
