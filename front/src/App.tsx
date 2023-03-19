@@ -19,13 +19,51 @@ function App() {
   const pastMessageAreaHeightRef = React.useRef<HTMLInputElement>(null)!;
   const pastMessageAreaWidthRef = React.useRef<HTMLInputElement>(null)!;
 
+  const [files, setFiles] = React.useState([]);
+
+  const updateFileNames = () => {
+    if (formRef.current) {
+      const formData = new FormData(formRef.current);
+      body: JSON.stringify(Object.fromEntries(formData.entries()))
+
+      const fetchData = async (data: any) => {
+        let resJson: any = [];
+        fetch("files", {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          redirect: 'follow',
+          referrerPolicy: 'no-referrer',
+        }).then((response: any) => {
+          if (!response.ok) {
+            console.log('error!');
+          }
+          resJson = response.json();
+          resJson.then((value: any) => {
+            setFiles(value.data);
+          });
+        }).then((response) => {
+          console.log(response);
+        }).catch((e) => {
+          console.log(e);
+        });
+      };
+      fetchData({});
+    }
+
+  };
+  React.useEffect(() => {
+    updateFileNames();
+  }, []);
 
   // input
   const [systemValue, setSystem] = React.useState<string>("You are a helpful assistant.");
   const [pastMessagesValue, setPastMessages] = React.useState<string>("");
   const [messageValue, setMessage] = React.useState<string>("Hello, secretary!");
   const [responseValue, setResponse] = React.useState<string>("");
-
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,7 +101,7 @@ function App() {
               let dataString = decoder.decode(value);
               const data = JSON.parse(dataString);
               console.log(data);
-  
+
               if (data.error) {
                 console.error("Error while generating content: " + data.message);
               } else if (!data.finished) {
@@ -76,7 +114,7 @@ function App() {
                     allMesages = newMessages
                     newMessages += data.text;
                     pastAreaRef.current.value = newMessages.trim();
-                  } else{
+                  } else {
                     pastAreaRef.current.value += data.text;
                   }
                   pastAreaRef.current.scrollTop = pastAreaRef.current.scrollHeight;
@@ -92,9 +130,9 @@ function App() {
                 setPastMessages(pastAreaRef.current.value);
               }
             }
-              
+
           } catch (error) {
-            console.log(error);            
+            console.log(error);
           }
           if (!done) {
             return readChunk();
@@ -120,27 +158,6 @@ function App() {
       setPastMessages("");
       setMessage("");
       callApi(formRef.current);
-    }
-  }
-
-
-  const setHeight = (e: React.ChangeEvent<HTMLInputElement>) => {
-
-    if (e.target.name === "systemAreaHeight") {
-      if (systemAreaRef.current) {
-        systemAreaRef.current.rows = parseInt(e.target.value);
-      }
-    }
-    else if (e.target.name === "messageAreaHeight") {
-      if (messageAreaRef.current) {
-        messageAreaRef.current.rows = parseInt(e.target.value);
-      }
-    }
-    else if (e.target.name === "pastMessageAreaHeight") {
-
-      if (pastAreaRef.current) {
-        pastAreaRef.current.rows = parseInt(e.target.value);
-      }
     }
   }
 
@@ -207,6 +224,7 @@ function App() {
           else {
             window.confirm('saved!');
           }
+          updateFileNames();
 
         }).then((response) => {
           // console.log(response);
@@ -224,8 +242,8 @@ function App() {
       const formData = new FormData(formRef.current);
       const fetchData = async (data: any) => {
         let resJson: any = [];
-        fetch("load-json" + "?name=" + encodeURI(nameAreaRef.current?.value ?? ""), {
-          method: 'GET',
+        fetch("load-json", {
+          method: 'POST',
           mode: 'cors',
           cache: 'no-cache',
           headers: {
@@ -233,6 +251,7 @@ function App() {
           },
           redirect: 'follow',
           referrerPolicy: 'no-referrer',
+          body: JSON.stringify(Object.fromEntries(formData.entries()))
         }).then((response) => {
           if (!response.ok) {
             console.log('error!');
@@ -269,6 +288,41 @@ function App() {
       fetchData({});
     }
   }
+
+  const deleteFile = (e: any) => {
+    e.preventDefault();
+    if (!window.confirm('Are you sure you want to delete this file?')) {
+      return;
+    }
+    if (formRef.current && nameAreaRef.current) {
+      const formData = new FormData(formRef.current);
+      const fetchData = async (data: any) => {
+        let resJson: any = [];
+        fetch("delete-json", {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          redirect: 'follow',
+          referrerPolicy: 'no-referrer',
+          body: JSON.stringify(Object.fromEntries(formData.entries()))
+        }).then((response) => {
+          if (!response.ok) {
+            console.log('error!');
+          } else {
+            window.confirm('Deleted!');
+          }
+          updateFileNames();
+        }).catch((e) => {
+          console.log(e);
+        });
+      };
+      fetchData({});
+    }
+  };
+
   return (
     <>
       <div className="" style={{ marginTop: 20, marginLeft: 20 }}>
@@ -279,61 +333,71 @@ function App() {
           <div className="contents">
             <div>
               <table>
-                <tr>
-                  <td valign="top">
-                    <p>system</p>
-                    <p>(rows:<input type="text" ref={systemAreaHeightRef} name="systemAreaHeight" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
-                    <p>(cols:<input type="text" ref={systemAreaWidthRef} name="systemAreaWidth" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
-                  </td>
-                  <td>
-                    <textarea ref={systemAreaRef} name="system" value={systemValue} onChange={(e) => setSystem(e.target.value)} rows={10} cols={80} />
-                  </td>
-                </tr>
-                <tr>
-                  <td valign="top">
-                    <p>request</p>
-                    <p>(rows:<input type="text" ref={messageAreaHeightRef} name="messageAreaHeight" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
-                  </td>
-                  <td>
-                    <textarea
-                      ref={messageAreaRef} name="message" value={messageValue}
-                      onChange={(e) => setMessage(e.target.value)}
-                      onKeyDown={sendMessage}
-                      rows={30} cols={80} />
-                    <td valign="top"><button type="submit">send message</button></td>
-                  </td>
-                </tr>
-                <tr>
-                  <td valign="top">last request is</td>
-                  <td>
-                    <textarea ref={responseAreaRef} value={responseValue} onChange={(e) => setResponse(e.target.value)} rows={6} cols={80} />
-                  </td>
-                </tr>
-                <tr>
-                  <td valign="top">
-                    <p>save </p>
-                  </td>
-                  <td>
-                    <input type="text" ref={nameAreaRef} name="name" width={4600} />
-                    <input type="button" onClick={save} value="save" />
-                    <input type="button" onClick={load} value="load" />
-                  </td>
-                </tr>
-                <tr>
-                  <td valign="top">
-                    <p>API KEY</p>
-                  </td>
-                  <td>
-                    <input type="password" ref={openaiApiKeyRef} name="openaiApiKey" width={400} />
-                  </td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td valign="top">
+                      <p>system</p>
+                      <p>(rows:<input type="range" ref={systemAreaHeightRef} name="systemAreaHeight" min="1" max="50" onChange={setWidthHeight} />)</p>
+                      <p>(cols:<input type="range" ref={systemAreaWidthRef} name="systemAreaWidth" min="1" max="200" onChange={setWidthHeight} />)</p>
+                    </td>
+                    <td>
+                      <textarea ref={systemAreaRef} name="system" value={systemValue} onChange={(e) => setSystem(e.target.value)} rows={10} cols={80} />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign="top">
+                      <p>request</p>
+                      <p>(rows:<input type="range" ref={messageAreaHeightRef} name="messageAreaHeight" min="1" max="50" onChange={setWidthHeight} />)</p>
+                    </td>
+                    <td>
+                      <textarea
+                        ref={messageAreaRef} name="message" value={messageValue}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={sendMessage}
+                        rows={30} cols={80} />
+                    </td>
+                  </tr>
+                  <tr><td></td><td>
+                      <button type="submit">send message</button></td>
+                      </tr>
+                  <tr>
+                    <td valign="top">last request is</td>
+                    <td>
+                      <textarea ref={responseAreaRef} value={responseValue} onChange={(e) => setResponse(e.target.value)} rows={6} cols={80} />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign="top">
+                      <p>save </p>
+                    </td>
+                    <td>
+                      <select id="fileNames" name="name2">
+                        {files.map((file, index) => (
+                          <option value={file} key={index} >{file}</option>
+                        ))}
+                      </select>
+                      <input type="text" list="fileNames" ref={nameAreaRef} name="name" />
+                      <input type="button" onClick={save} value="save" />
+                      <input type="button" onClick={load} value="load" />
+                      <input type="button" onClick={deleteFile} value="delete" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td valign="top">
+                      <p>API KEY</p>
+                    </td>
+                    <td>
+                      <input type="password" ref={openaiApiKeyRef} name="openaiApiKey" width={400} />
+                    </td>
+                  </tr>
+                </tbody>
               </table>
             </div>
             <div className="contents">
               <div>
                 <p>chat gpt response</p>
-                <p>(rows:<input type="text" ref={pastMessageAreaHeightRef} name="pastMessageAreaHeight" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
-                <p>(cols:<input type="text" ref={pastMessageAreaWidthRef} name="pastMessageAreaWidth" onChange={setWidthHeight} style={{ width: 40, textAlign: "right" }} />)</p>
+                <p>(rows:<input type="range" ref={pastMessageAreaHeightRef} name="pastMessageAreaHeight" min="1" max="200" onChange={setWidthHeight} />)</p>
+                <p>(cols:<input type="range" ref={pastMessageAreaWidthRef} name="pastMessageAreaWidth" min="1" max="200" onChange={setWidthHeight} />)</p>
                 <p><input type="button" onClick={summarize} value="summarize" /></p>
                 <p><input type="button" onClick={(e) => { setPastMessages(""); setMessage("") }} value="clear" /></p>
               </div>
