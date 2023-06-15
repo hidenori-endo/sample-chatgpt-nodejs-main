@@ -51,7 +51,18 @@ function App() {
       if (messageAreaRef.current.value.trim() === "") {
         return;
       }
+
+      // 履歴に追加
       appendResponse('user', messageAreaRef.current.value);
+
+      setMessage("")
+
+      // console.log(data);
+      if (!pastMessagesValue) {
+        setPastMessages('[user]\n' + messageAreaRef.current.value.trim());
+      } else {
+        setPastMessages(pastMessagesValue + '\n\n[user]\n' + messageAreaRef.current.value.trim());
+      }
     }
     
     setApiInProgress(true);
@@ -62,7 +73,6 @@ function App() {
     if (ApiInProgress) { // falseでは実行しない
       // 非同期通信
       const fetchData = async (data: any) => {
-        let resJson: any = [];
         let res = await fetch("/api", {
           method: 'POST',
           mode: 'cors',
@@ -77,51 +87,31 @@ function App() {
             'messages': messageHistory,
           }),
         });
+
         const reader = res.body!.getReader()!;
         const decoder = new TextDecoder("utf-8");
-        let isFirst = true;
-        let allMesages = "";
+        let assistantResponse = "";
+
         const readChunk = async () => {
-          return reader.read().then(({ value, done }): any => { // Added async here
+          return reader.read().then(({ value, done }): any => {
             try {
               if (!done) {
                 let dataString = decoder.decode(value);
                 const data = JSON.parse(dataString);
-                console.log(data);
   
-                if (data.finished != true) {
+                if (!data.finished) {
+                  assistantResponse += data.text;
+                  setPastMessages(pastMessagesValue + '\n\n[assistant]\n' + assistantResponse);
+                } else {
                   appendResponse('assistant', data.text);
                 }
   
                 // エラー時
                 if (data.error) {
                   console.error("Error while generating content: " + data.message);
-                } else if (!data.finished) {
-                  if (pastAreaRef.current) {
-                    if (isFirst) {
-                      isFirst = false;
-                      let newMessages = pastAreaRef.current.value;
-                      newMessages += '\n\n' + '[user]' + '\n' + messageValue.trim() + '\n';
-                      newMessages += '\n' + '[assistant]' + '\n';
-                      allMesages = newMessages
-                      newMessages += data.text;
-                      pastAreaRef.current.value = newMessages.trim();
-                    } else {
-                      pastAreaRef.current.value += data.text;
-                    }
-                    pastAreaRef.current.scrollTop = pastAreaRef.current.scrollHeight;
-                  }
-                } else {
-                  if (pastAreaRef.current) {
-                    pastAreaRef.current.value = (allMesages + data.text).trim();
-                  }
                 }
-  
               } else {
                 console.log("done");
-                if (pastAreaRef.current) {
-                  setPastMessages(pastAreaRef.current.value);
-                }
               }
             } catch (error) {
               console.log(error);
