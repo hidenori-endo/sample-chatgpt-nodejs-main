@@ -1,6 +1,7 @@
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 import express from "express";
 import { Readable } from "stream";
+import dotenv from "dotenv";
 
 export const getCompletion = async (jsonData: any, res: express.Response) => {
     const message = jsonData.message;
@@ -10,42 +11,40 @@ export const getCompletion = async (jsonData: any, res: express.Response) => {
     }
 
     let configuration;
-    if (jsonData.openaiApiKey != "") {
-        configuration = new Configuration({
-            apiKey: jsonData.openaiApiKey,
-        });
-    }
-    else if (process.env.OPENAI_API_KEY) {
-        configuration = new Configuration({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
-    }
+    dotenv.config();
+    
+    configuration = new Configuration({
+        apiKey: process.env.OPENAI_API_KEY,
+    });
     const openai = new OpenAIApi(configuration);
 
     const pastMessagea = jsonData.pastMessage.split('\n');
 
     const messages: Array<ChatCompletionRequestMessage> = new Array<ChatCompletionRequestMessage>();
     let m: ChatCompletionRequestMessage = { role: "user", content: "" };
+    
     if (jsonData.system != "") {
         messages.push({ role: "system", content: jsonData.system })
     }
     pastMessagea.forEach((line: string) => {
         switch (line) {
             case '[user]':
-                if (m.content.trim() != "") {
+                if (m.content != undefined && m.content.trim() != "") {
                     messages.push(m);
                 }
                 m = { role: "user", content: "" };
                 break;
             case '[assistant]':
-                if (m.content.trim() != "") {
+                if (m.content != undefined && m.content.trim() != "") {
                     messages.push(m);
                 }
                 m = { role: "assistant", content: "" };
                 break;
             default:
                 m.content += line + "\n";
-                m.content = m.content.trim();
+                if (m.content != undefined) {
+                    m.content = m.content.trim();
+                }
                 break;
         }
     })
