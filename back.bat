@@ -1,0 +1,2 @@
+cd back
+npm start

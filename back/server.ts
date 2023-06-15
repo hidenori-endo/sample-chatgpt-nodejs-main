@@ -3,12 +3,12 @@ import * as fs from 'fs';
 const path = require('path');
 import { getCompletion } from "./chatmain";
 
-
 const app: express.Express = express();
 app.use(express.json());
 app.use(express.static("public"));
 const port = 8000;
 
+// POST 送信
 app.post("/api", (req: express.Request, res: express.Response) => {
   const body = req.body;
 
@@ -19,7 +19,7 @@ app.post("/api", (req: express.Request, res: express.Response) => {
   }
 });
 
-// POST API: save to file
+// POST 保存z
 app.post('/save-json', (req, res) => {
   const body = req.body;
   if (!body) {
