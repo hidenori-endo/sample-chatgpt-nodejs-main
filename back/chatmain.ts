@@ -3,57 +3,20 @@ import express from "express";
 import { Readable } from "stream";
 import dotenv from "dotenv";
 
+dotenv.config();
+
 export const getCompletion = async (jsonData: any, res: express.Response) => {
-    const message = jsonData.message;
-    if (message.trim() == "") {
-        res.json();
-        return;
-    }
 
     let configuration;
-    dotenv.config();
     
     configuration = new Configuration({
         apiKey: process.env.OPENAI_API_KEY,
     });
     const openai = new OpenAIApi(configuration);
 
-    const pastMessagea = jsonData.pastMessage.split('\n');
+    const messages = jsonData.messages;
 
-    const messages: Array<ChatCompletionRequestMessage> = new Array<ChatCompletionRequestMessage>();
-    let m: ChatCompletionRequestMessage = { role: "user", content: "" };
-    
-    if (jsonData.system != "") {
-        messages.push({ role: "system", content: jsonData.system })
-    }
-    pastMessagea.forEach((line: string) => {
-        switch (line) {
-            case '[user]':
-                if (m.content != undefined && m.content.trim() != "") {
-                    messages.push(m);
-                }
-                m = { role: "user", content: "" };
-                break;
-            case '[assistant]':
-                if (m.content != undefined && m.content.trim() != "") {
-                    messages.push(m);
-                }
-                m = { role: "assistant", content: "" };
-                break;
-            default:
-                m.content += line + "\n";
-                if (m.content != undefined) {
-                    m.content = m.content.trim();
-                }
-                break;
-        }
-    })
-
-    if (m.content) {
-        messages.push(m);
-    }
-
-    messages.push({ role: "user", content: message })
+    console.log(messages)
 
     try {
 
