@@ -1,5 +1,4 @@
 import * as React from "react";
-
 import './App.css';
 
 function App() {
@@ -7,15 +6,20 @@ function App() {
   // Ref
   const formRef = React.useRef<HTMLFormElement>(null)!;
   const messageAreaRef = React.useRef<HTMLTextAreaElement>(null)!;
-  const responseAreaRef = React.useRef<HTMLTextAreaElement>(null)!; // last request
   const pastAreaRef = React.useRef<HTMLTextAreaElement>(null)!;
+
+  // input
+  const systemValue: string = "返答は英語でしてください。翻訳ではなく、返答をしてください";
+  const [pastMessagesValue, setPastMessages] = React.useState<string>("");
+  const [messageValue, setMessage] = React.useState<string>("はじめましょう");
 
   // メッセージ履歴
   interface Message {
-    role: 'assistant' | 'user';
+    role: 'assistant' | 'user' | 'system';
     content: string;
   }
-  const [messageHistory, setMessageHistory] = React.useState<Message[]>([]);
+
+  const [messageHistory, setMessageHistory] = React.useState<Message[]>([{ role: "system", content: systemValue }]);
   const [ApiInProgress, setApiInProgress] = React.useState(false);
 
   async function appendResponse(role: 'assistant' | 'user', message: string) {
@@ -25,11 +29,6 @@ function App() {
   React.useEffect(() => {
     console.log(messageHistory);
   }, [messageHistory]);
-
-  // input
-  const systemValue: string = "You are a helpful assistant.";
-  const [pastMessagesValue, setPastMessages] = React.useState<string>("");
-  const [messageValue, setMessage] = React.useState<string>("Hello, secretary!");
   
   // 送信
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -56,6 +55,7 @@ function App() {
       appendResponse('user', messageAreaRef.current.value);
 
       setMessage("")
+      messageAreaRef.current?.focus();
 
       // console.log(data);
       if (!pastMessagesValue) {
@@ -131,43 +131,28 @@ function App() {
   }, [ApiInProgress]);
 
   return (
-    <>
-      <div className="" style={{ marginTop: 20, marginLeft: 20 }}>
-        <div>
-          <h2 className="">ChatGPT API Test</h2>
-        </div>
+  <div className="App">
+    <header>
+      <h2 className="">ChatGPT API Test</h2>
+    </header>
+
+    <main className="row">
         <form ref={formRef} onSubmit={submit}>
-          <div className="contents">
-            <div>
-              <table>
-                <tbody>
-                  <tr><td>request</td></tr>
-                  <tr><td>
-                      <textarea
-                        ref={messageAreaRef} name="message" value={messageValue}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={sendMessage}
-                        rows={30} cols={80} />
-                  </td></tr>
-                  <tr><td>
-                      <button type="submit">send message</button>
-                  </td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="contents">
-              <div>
-                <p>chat gpt response</p>
-                <p><input type="button" onClick={(e) => { setPastMessages(""); setMessage("") }} value="clear" /></p>
-              </div>
-              <div>
-                <textarea ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} onChange={(e) => setPastMessages(e.target.value)} rows={60} cols={80} />
-              </div>
-            </div>
+          <div className="col-12 col-md-8 mx-auto">
+            <p className="mt-4">request</p>
+            <textarea className="form-control question"
+                ref={messageAreaRef} name="message" value={messageValue}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={sendMessage} />
+            <button type="submit" className="btn btn-dark mt-3">send message</button>
+
+            <p className="mt-4">response</p>
+            <textarea className="form-control answer"
+                ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} />
           </div>
         </form>
-      </div>
-    </>
+    </main>
+  </div>
   );
 }
 

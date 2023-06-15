@@ -1,15 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+import 'ress'; // ress.cssをインポート
+import './index.css';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
+    <HelmetProvider>
+      <Helmet>
+        <title>ChatGPT API Test</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+      </Helmet>
     <App />
+    </HelmetProvider>
   </React.StrictMode>
 );
 

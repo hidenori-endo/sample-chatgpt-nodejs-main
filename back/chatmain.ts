@@ -15,7 +15,6 @@ export const getCompletion = async (jsonData: any, res: express.Response) => {
     const openai = new OpenAIApi(configuration);
 
     const messages = jsonData.messages;
-
     console.log(messages)
 
     try {
@@ -73,7 +72,6 @@ export const getCompletion = async (jsonData: any, res: express.Response) => {
                 console.error(error);
             }
         });
-
 
         stream.on("end", () => {
             res.write(JSON.stringify({ finished: true, text: allMesages }));

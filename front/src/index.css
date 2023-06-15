@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css');
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -10,4 +12,27 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.container {
+  padding: 0;
+}
+
+header {
+  padding: 20px;
+  background: black;
+  color:white;
+}
+
+main {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.question {
+  height: 80px;
+}
+
+.answer {
+  height: 500px;
 }
