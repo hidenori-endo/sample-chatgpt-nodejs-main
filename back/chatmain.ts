@@ -6,22 +6,46 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const getCompletion = async (jsonData: any, res: express.Response) => {
-  let configuration;
+  // APIキー
+  const apiKey = process.env.OPENAI_API_KEY;
+  const openai = new OpenAIApi(
+    new Configuration({
+      apiKey: apiKey,
+    })
+  );
 
-  configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-  const openai = new OpenAIApi(configuration);
-
+  // ユーザー入力
   const messages = jsonData.messages;
-  console.log(messages);
+
+  // function calling
+  const functions = [
+    {
+      name: "set_topic",
+      description: "topicの作成",
+      parameters: {
+        type: "object",
+        properties: {
+          topic_majority: {
+            type: "string",
+            description: "多数派",
+          },
+          topic_minority: {
+            type: "string",
+            description: "少数派",
+          },
+        },
+        required: ["Order to set topic"],
+      },
+    },
+  ];
 
   try {
     // call api
     const completion = await openai.createChatCompletion(
       {
-        model: "gpt-3.5-turbo",
+        model: "gpt-3.5-turbo-0613",
         messages: messages,
+        functions: functions,
         stream: true,
       },
       { responseType: "stream" }
@@ -45,6 +69,8 @@ export const getCompletion = async (jsonData: any, res: express.Response) => {
           return;
         }
 
+        console.log(str);
+
         // Lines to json
         const lines: Array<string> = str.split("\n");
         lines.forEach((line) => {
@@ -60,16 +86,8 @@ export const getCompletion = async (jsonData: any, res: express.Response) => {
 
           // parse json
           const data = JSON.parse(line);
-          if (
-            data.choices[0].delta.content === null ||
-            data.choices[0].delta.content === undefined
-          ) {
-            return;
-          }
-          process.stdout.write(data.choices[0].delta.content);
-          allMesages += data.choices[0].delta.content;
-          res.write(JSON.stringify({ text: data.choices[0].delta.content }));
-          //res.flush();
+          let choice = data.choices[0];
+          res.write(JSON.stringify(choice));
         });
       } catch (error) {
         console.error(error);
@@ -77,7 +95,7 @@ export const getCompletion = async (jsonData: any, res: express.Response) => {
     });
 
     stream.on("end", () => {
-      res.write(JSON.stringify({ finished: true, text: allMesages }));
+      res.write(JSON.stringify({ finished: true }));
       res.end();
     });
     stream.on("error", (error) => {
