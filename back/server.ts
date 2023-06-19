@@ -1,5 +1,5 @@
 import express from "express";
-const path = require('path');
+const path = require("path");
 import { getCompletion } from "./chatmain";
 
 const app: express.Express = express();
@@ -11,14 +11,14 @@ const port = 8000;
 app.post("/api", (req: express.Request, res: express.Response) => {
   const body = req.body;
 
+  // chatmain
   try {
     getCompletion(body, res);
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
 });
 
 app.listen(port, () => {
   console.log(`running at port ${port} `);
 });
-

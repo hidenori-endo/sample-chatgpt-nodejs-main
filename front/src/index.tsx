@@ -1,24 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
+import Headder from './components/headder';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-
-import 'ress'; // ress.cssをインポート
 import './index.css';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+const headerRoot = ReactDOM.createRoot(
+  document.getElementById('header') as HTMLElement
 );
-root.render(
+headerRoot.render(<Headder />);
+
+const appRoot = ReactDOM.createRoot(
+  document.getElementById('main') as HTMLElement
+);
+appRoot.render(
   <React.StrictMode>
-    <HelmetProvider>
-      <Helmet>
-        <title>ChatGPT API Test</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
-      </Helmet>
     <App />
-    </HelmetProvider>
   </React.StrictMode>
 );
 

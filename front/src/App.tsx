@@ -1,48 +1,52 @@
 import * as React from "react";
-import './App.css';
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Form, Row, Col } from "react-bootstrap";
+import "./App.css";
 
 function App() {
-
   // Ref
   const formRef = React.useRef<HTMLFormElement>(null)!;
   const messageAreaRef = React.useRef<HTMLTextAreaElement>(null)!;
   const pastAreaRef = React.useRef<HTMLTextAreaElement>(null)!;
 
-  // input
-  const systemValue: string = "返答は英語でしてください。翻訳ではなく、返答をしてください";
-  const [pastMessagesValue, setPastMessages] = React.useState<string>("");
-  const [messageValue, setMessage] = React.useState<string>("はじめましょう");
+  // State
+  const [messageValue, setMessage] = React.useState<string>("はじめましょう"); // input
+  const [ApiInProgress, setApiInProgress] = React.useState(false); // API送信
+  const systemValue: string =
+    "いかなる質問にも、「ゲームの始まりです…笑」と言ってください。他の言葉は必要ありません。";
+  const [pastMessagesValue, setPastMessages] = React.useState<string>(""); // 結果
 
   // メッセージ履歴
+  const [messageHistory, setMessageHistory] = React.useState<Message[]>([
+    { role: "system", content: systemValue },
+  ]); // POST用の履歴
+
   interface Message {
-    role: 'assistant' | 'user' | 'system';
+    role: "assistant" | "user" | "system";
     content: string;
   }
 
-  const [messageHistory, setMessageHistory] = React.useState<Message[]>([{ role: "system", content: systemValue }]);
-  const [ApiInProgress, setApiInProgress] = React.useState(false);
-
-  async function appendResponse(role: 'assistant' | 'user', message: string) {
-    setMessageHistory(prev => [...prev, { role, content: message }]);
+  async function appendResponse(role: "assistant" | "user", message: string) {
+    setMessageHistory((prev) => [...prev, { role, content: message }]);
   }
 
-  React.useEffect(() => {
-    console.log(messageHistory);
-  }, [messageHistory]);
-  
+  // React.useEffect(() => {
+  //   console.log(messageHistory);
+  // }, [messageHistory]);
+
   // 送信
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     afterClickedButton(e.target as HTMLFormElement);
-  }
+  };
 
   const sendMessage = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.shiftKey && e.key === 'Enter') {
+    if (e.shiftKey && e.key === "Enter") {
       if (formRef.current) {
         afterClickedButton(formRef.current);
       }
     }
-  }
+  };
 
   // クリックの処理後、ApiInProgressをtrueにする
   const afterClickedButton = (e: HTMLFormElement) => {
@@ -52,39 +56,44 @@ function App() {
       }
 
       // 履歴に追加
-      appendResponse('user', messageAreaRef.current.value);
+      appendResponse("user", messageAreaRef.current.value);
 
-      setMessage("")
+      setMessage("");
       messageAreaRef.current?.focus();
 
       // console.log(data);
       if (!pastMessagesValue) {
-        setPastMessages('[user]\n' + messageAreaRef.current.value.trim());
+        setPastMessages("[user]\n" + messageAreaRef.current.value.trim());
       } else {
-        setPastMessages(pastMessagesValue + '\n\n[user]\n' + messageAreaRef.current.value.trim());
+        setPastMessages(
+          pastMessagesValue +
+            "\n\n[user]\n" +
+            messageAreaRef.current.value.trim()
+        );
       }
     }
-    
+
     setApiInProgress(true);
-  }
+  };
 
   // ApiInProgressがtrueになったら、POST
   React.useEffect(() => {
-    if (ApiInProgress) { // falseでは実行しない
+    if (ApiInProgress) {
+      // falseでは実行しない
       // 非同期通信
       const fetchData = async (data: any) => {
         let res = await fetch("/api", {
-          method: 'POST',
-          mode: 'cors',
-          cache: 'no-cache',
+          method: "POST",
+          mode: "cors",
+          cache: "no-cache",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
-          redirect: 'follow',
-          referrerPolicy: 'no-referrer',
+          redirect: "follow",
+          referrerPolicy: "no-referrer",
           body: JSON.stringify({
-            'system': systemValue,
-            'messages': messageHistory,
+            system: systemValue,
+            messages: messageHistory,
           }),
         });
 
@@ -98,17 +107,21 @@ function App() {
               if (!done) {
                 let dataString = decoder.decode(value);
                 const data = JSON.parse(dataString);
-  
+
                 if (!data.finished) {
                   assistantResponse += data.text;
-                  setPastMessages(pastMessagesValue + '\n\n[assistant]\n' + assistantResponse);
+                  setPastMessages(
+                    pastMessagesValue + "\n\n[assistant]\n" + assistantResponse
+                  );
                 } else {
-                  appendResponse('assistant', data.text);
+                  appendResponse("assistant", data.text);
                 }
-  
+
                 // エラー時
                 if (data.error) {
-                  console.error("Error while generating content: " + data.message);
+                  console.error(
+                    "Error while generating content: " + data.message
+                  );
                 }
               } else {
                 console.log("done");
@@ -131,28 +144,41 @@ function App() {
   }, [ApiInProgress]);
 
   return (
-  <div className="App">
-    <header>
-      <h2 className="">ChatGPT API Test</h2>
-    </header>
-
-    <main className="row">
-        <form ref={formRef} onSubmit={submit}>
-          <div className="col-12 col-md-8 mx-auto">
-            <p className="mt-4">request</p>
-            <textarea className="form-control question"
-                ref={messageAreaRef} name="message" value={messageValue}
+    <div className="container-fluid">
+      <Form ref={formRef} onSubmit={submit}>
+        <Row>
+          <Col xs={12} md={8} className="mx-auto">
+            <Form.Group className="mt-4" controlId="input">
+              <Form.Label>request</Form.Label>
+              <Form.Control
+                as="textarea"
+                className="question"
+                ref={messageAreaRef}
+                name="message"
+                defaultValue={messageValue}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={sendMessage} />
-            <button type="submit" className="btn btn-dark mt-3">send message</button>
+                onKeyDown={sendMessage}
+              />
+              <Form.Control as="button" type="submit" className="mt-3">
+                send
+              </Form.Control>
+            </Form.Group>
 
-            <p className="mt-4">response</p>
-            <textarea className="form-control answer"
-                ref={pastAreaRef} name="pastMessage" value={pastMessagesValue} />
-          </div>
-        </form>
-    </main>
-  </div>
+            <Form.Group className="mt-4" controlId="input">
+              <Form.Label>response</Form.Label>
+              <Form.Control
+                disabled
+                as="textarea"
+                className="answer"
+                ref={pastAreaRef}
+                name="pastMessage"
+                value={pastMessagesValue}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+      </Form>
+    </div>
   );
 }
 
